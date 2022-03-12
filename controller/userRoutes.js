@@ -21,6 +21,18 @@ function userRoutes({ app, db }) {
     });
   });
 
+  app.post("/reset-password-request", (req, res) => {
+    userService.resetPasswordRequest(db, req.body, (result) => {
+      // res.send(result);
+    });
+  });
+
+  app.post("/reset-password", (req, res) => {
+    userService.resetPassword(db, req.body, (result) => {
+      res.send(result);
+    });
+  });
+
   app.get("/", jwtMW, (req, res) => {
     res.send("You are authenticated");
   });

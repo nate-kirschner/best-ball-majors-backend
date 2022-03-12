@@ -32,14 +32,6 @@ async function startServer() {
 
   const db = await loaders({ app });
 
-  // Only for testing web scraping
-  // await addCurrentTournament(db, async (currentTournamentId) => {
-  // await addPlayersInTournament(db, currentTournamentId, (playersAdded) => {});
-  // await calculateBestBallScores(db, currentTournamentId, (result) => {});
-  // });
-  // // await addPlayerRankings(db, (result) => {});
-  // return;
-
   const port = config.port;
   app.listen(port, (err) => {
     if (err) {
@@ -61,13 +53,23 @@ async function startServer() {
   cron.schedule(
     "0 * * * 0,4,5,6",
     async function () {
-      await addCurrentTournament(db, async (currentTournamentId) => {
-        await addPlayerScores(
-          db,
-          currentTournamentId,
-          (playerScoresAdded) => {}
-        );
-      });
+      try {
+        await addCurrentTournament(db, async (currentTournamentId) => {
+          await addPlayerScores(
+            db,
+            currentTournamentId,
+            (playerScoresAdded) => {
+              calculateBestBallScores(
+                db,
+                currentTournamentId,
+                (bestBallUpdated) => {}
+              );
+            }
+          );
+        });
+      } catch (error) {
+        console.log("Error updating player scores: " + error);
+      }
     },
     {}
   );
@@ -76,15 +78,19 @@ async function startServer() {
   cron.schedule(
     "0 7,19 * * 1,2,3",
     async function () {
-      await addCurrentTournament(db, async (currentTournamentId) => {
-        await addPlayersInTournament(
-          db,
-          currentTournamentId,
-          async (playersAdded) => {
-            await addPlayerRankings(db, (playerRankingsAdded) => {});
-          }
-        );
-      });
+      try {
+        await addCurrentTournament(db, async (currentTournamentId) => {
+          await addPlayersInTournament(
+            db,
+            currentTournamentId,
+            async (playersAdded) => {
+              await addPlayerRankings(db, (playerRankingsAdded) => {});
+            }
+          );
+        });
+      } catch (error) {
+        console.log("Error getting players and rankings: " + error);
+      }
     },
     {}
   );

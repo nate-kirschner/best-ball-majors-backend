@@ -3,7 +3,6 @@ const scorecardsDAO = require("../dao/scorecardsDAO");
 const scorecardsService = require("./scorecardService");
 
 async function calculateBestBallScores(db, currentTournamentId, callback) {
-  currentTournamentId = 8;
   rostersDAO.getRostersForTournament(
     db,
     { tournamentId: currentTournamentId },

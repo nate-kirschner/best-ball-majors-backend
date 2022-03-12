@@ -16,6 +16,7 @@ async function addPlayerRankings(db, callback) {
       );
     }
   });
+  callback({ status: 200 });
 }
 
 module.exports = addPlayerRankings;

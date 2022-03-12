@@ -39,7 +39,6 @@ function getAllHomePageInfo(db, callback) {
             : -1;
         }
       });
-      console.log(sortedData.map((player) => player.position));
       const result = {
         currentTournament,
         data: sortedData,
@@ -107,33 +106,38 @@ function getCurrentTournamentScorecards(db, callback) {
 }
 
 function joinCards(leaderboardArray, scorecardsArray, playersArray) {
-  return leaderboardArray.map((leaderboardItem) => {
-    const scorecardItem = scorecardsArray.find(
-      (item) =>
-        item.player_id === leaderboardItem.player_id &&
-        item.tournament_id === leaderboardItem.tournament_id
-    );
-    const playerItem = playersArray.find(
-      (item) => item.id === leaderboardItem.player_id
-    );
-    return {
-      tournamentId: leaderboardItem.tournament_id,
-      playerId: leaderboardItem.player_id,
-      position: leaderboardItem.position,
-      toPar: leaderboardItem.to_par,
-      round1Score: leaderboardItem.round_1,
-      round2Score: leaderboardItem.round_2,
-      round3Score: leaderboardItem.round_3,
-      round4Score: leaderboardItem.round_4,
-      totalScore: leaderboardItem.total,
-      parId: scorecardItem.par_id,
-      round1Id: scorecardItem.round_1_id,
-      round2Id: scorecardItem.round_2_id,
-      round3Id: scorecardItem.round_3_id,
-      round4Id: scorecardItem.round_4_id,
-      playerName: playerItem.player_name,
-    };
-  });
+  return leaderboardArray
+    .map((leaderboardItem) => {
+      const scorecardItem = scorecardsArray.find(
+        (item) =>
+          item.player_id === leaderboardItem.player_id &&
+          item.tournament_id === leaderboardItem.tournament_id
+      );
+      if (!scorecardItem) {
+        return -1;
+      }
+      const playerItem = playersArray.find(
+        (item) => item.id === leaderboardItem.player_id
+      );
+      return {
+        tournamentId: leaderboardItem.tournament_id,
+        playerId: leaderboardItem.player_id,
+        position: leaderboardItem.position,
+        toPar: leaderboardItem.to_par,
+        round1Score: leaderboardItem.round_1,
+        round2Score: leaderboardItem.round_2,
+        round3Score: leaderboardItem.round_3,
+        round4Score: leaderboardItem.round_4,
+        totalScore: leaderboardItem.total,
+        parId: scorecardItem.par_id,
+        round1Id: scorecardItem.round_1_id,
+        round2Id: scorecardItem.round_2_id,
+        round3Id: scorecardItem.round_3_id,
+        round4Id: scorecardItem.round_4_id,
+        playerName: playerItem.player_name,
+      };
+    })
+    .filter((item) => item !== -1);
 }
 
 // player object

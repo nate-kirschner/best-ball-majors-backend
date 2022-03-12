@@ -167,7 +167,6 @@ function getRosterScorecardData(db, params, callback) {
       const players = [player1Holes, player2Holes, player3Holes, player4Holes];
       players.map((playerHoles) => {
         playerHoles.map((playerRound) => {
-          console.log(playerRound);
           if (scores[playerRound.player_id]) {
             scores[playerRound.player_id][playerRound.round_number] =
               playerRound;
@@ -230,7 +229,6 @@ function getCurrentTournamentPlayers(db, callback) {
         return 1;
       }
     });
-    console.log(sortedPlayerList.map((i) => i.player_rank));
     const playerPages = {
       1: sortedPlayerList.slice(0, 15),
       2: sortedPlayerList.slice(15, 40),

@@ -46,7 +46,12 @@ function subtractScoresFromPar(db, params) {
     scores[round] = {};
     for (let hole = 1; hole <= 18; hole++) {
       const holeStr = "hole_" + hole;
-      scores[round][holeStr] = roundScores[holeStr] - par[holeStr];
+      if (roundScores[holeStr] === null) {
+        roundScores[holeStr] = par[holeStr];
+        scores[round][holeStr] = roundScores[holeStr] - par[holeStr];
+      } else {
+        scores[round][holeStr] = roundScores[holeStr] - par[holeStr];
+      }
     }
   });
   return scores;

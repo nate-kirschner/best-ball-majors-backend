@@ -115,17 +115,14 @@ function addOrUpdateRoundsTable(
           ),
         };
         if (round.length === 0) {
-          scorecardsDAO.addRound(db, params, (result) => {
-            callback({ status: 200 });
-          });
+          scorecardsDAO.addRound(db, params, (result) => {});
         } else {
-          scorecardsDAO.updateRound(db, params, (result) => {
-            callback({ status: 200 });
-          });
+          scorecardsDAO.updateRound(db, params, (result) => {});
         }
       }
     );
   }
+  callback({ status: 200 });
 }
 
 module.exports = addPlayerScores;

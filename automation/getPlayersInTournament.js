@@ -1,20 +1,13 @@
 const puppeteer = require("puppeteer");
 
 async function getPlayersInTournament() {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto("https://espn.com/golf/leaderboard");
 
   // Get the table headers for the competitors table
   await page.waitForSelector(".competitors .Table__THEAD th");
   const tableHeader = await page.$$(".competitors .Table__THEAD th");
-
-  // Before a tournament starts the headers should be | caret | name | tee |
-  // If it isn't this, should return out of this method
-  if (tableHeader.length !== 3) {
-    console.log("Tournament has either already started or hasn't begun");
-    return;
-  }
 
   // Get the column number of the player name column
   let nameColumn = -1;

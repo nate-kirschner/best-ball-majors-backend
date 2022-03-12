@@ -4,7 +4,7 @@ const getPlayersInTournament = require("../automation/getPlayersInTournament");
 async function getPlayerScores() {
   let playersInTournament = await getPlayersInTournament();
 
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto("https://espn.com/golf/leaderboard");
 
@@ -58,7 +58,12 @@ async function getPlayerScores() {
     if (playerClicked === 200) {
       const playerRowData = await getPlayerRow(page, playerName, columnIndices);
       const playerScorecardData = await getPlayerScorecard(page, playerName);
-      allPlayersData.push({ ...playerRowData, scorecard: playerScorecardData });
+      if (playerScorecardData) {
+        allPlayersData.push({
+          ...playerRowData,
+          scorecard: playerScorecardData,
+        });
+      }
     }
   }
 

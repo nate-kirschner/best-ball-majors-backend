@@ -11,7 +11,7 @@ function rostersRoutes({ app, db }) {
   app.post("/can-rosters-be-created", (req, res) => {
     rostersService.canRostersBeCreated(db, req.body, (result) => {
       res.send({
-        canRostersBeCreated: true,
+        canRostersBeCreated: result.canRostersBeCreated,
       });
     });
   });

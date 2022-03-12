@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 
 async function getCurrentTournament() {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto("https://espn.com/golf/leaderboard");
 

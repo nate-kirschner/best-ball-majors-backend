@@ -6,7 +6,7 @@ const scorecardsDAO = require("../dao/scorecardsDAO");
 async function addPlayersInTournament(db, currentTournamentId, callback) {
   const playersInTournament = await getPlayersInTournament();
 
-  addNewPlayersToPlayersTable(db, playersInTournament, (playerId) => {
+  await addNewPlayersToPlayersTable(db, playersInTournament, (playerId) => {
     // next add to leaderboard table
     addNewPlayerToLeaderboardTable(
       db,
@@ -24,6 +24,7 @@ async function addPlayersInTournament(db, currentTournamentId, callback) {
       }
     );
   });
+  callback({ status: 200 });
 }
 
 function addNewPlayersToPlayersTable(db, playersInTournament, callback) {
@@ -123,33 +124,30 @@ function addRoundsForNewPlayer(db, tournamentId, playerId, callback) {
 }
 
 function addScorecardForNewPlayer(db, tournamentId, playerId, callback) {
-  console.log("adding scorecard");
   scorecardsDAO.getAllRoundIdsForPlayerAndTournament(
     db,
     { tournamentId, playerId },
     (rounds) => {
-      const parId = rounds.find((round) => round.round_number === 0).id;
-      const round1Id = rounds.find((round) => round.round_number === 1).id;
-      const round2Id = rounds.find((round) => round.round_number === 2).id;
-      const round3Id = rounds.find((round) => round.round_number === 3).id;
-      const round4Id = rounds.find((round) => round.round_number === 4).id;
+      const parId = rounds.find((round) => round.round_number === 0);
+      const round1Id = rounds.find((round) => round.round_number === 1);
+      const round2Id = rounds.find((round) => round.round_number === 2);
+      const round3Id = rounds.find((round) => round.round_number === 3);
+      const round4Id = rounds.find((round) => round.round_number === 4);
       const params = {
         playerId,
         tournamentId,
-        parId,
-        round1Id,
-        round2Id,
-        round3Id,
-        round4Id,
+        parId: parId && parId.id ? parId.id : null,
+        round1Id: round1Id && round1Id.id ? round1Id.id : null,
+        round2Id: round2Id && round2Id.id ? round2Id.id : null,
+        round3Id: round3Id && round3Id.id ? round3Id.id : null,
+        round4Id: round4Id && round4Id.id ? round4Id.id : null,
       };
       scorecardsDAO.getScorecard(db, params, (scorecard) => {
         if (scorecard.length === 0) {
-          console.log("scorecard doesn't exist");
           scorecardsDAO.addScorecard(db, params, (result) => {
             callback(result);
           });
         } else {
-          console.log("scorecard exists");
           callback({ status: 200 });
         }
       });

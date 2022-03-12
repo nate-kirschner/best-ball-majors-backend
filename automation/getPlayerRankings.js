@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 
 async function getPlayerRankings(allPlayers) {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto(
     "http://www.owgr.com/Ranking.aspx?pageNo=1&pageSize=All&country=All"
