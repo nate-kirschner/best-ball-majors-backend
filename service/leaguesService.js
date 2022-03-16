@@ -1,6 +1,7 @@
 const leaguesDAO = require("../dao/leaguesDAO");
 const userDAO = require("../dao/userDAO");
 const rostersDAO = require("../dao/rostersDAO");
+const homeService = require("./homeService");
 
 function getUsersLeagues(db, params, callback) {
   const { username } = params;
@@ -101,6 +102,37 @@ function getLeagueName(db, params, callback) {
   });
 }
 
+function getAvailableLeaguesForNewRoster(db, params, callback) {
+  const { username } = params;
+  userDAO.getUserFromUsername(db, { username }, (userInfo) => {
+    const userId = userInfo[0].id;
+    homeService.getCurrentTournament(db, (currentTournament) => {
+      const tournamentId = currentTournament.id;
+      rostersDAO.getRosterFromUserIdAndTournamentId(
+        db,
+        { userId, tournamentId },
+        (usersRosters) => {
+          const rosterIds = usersRosters.map((roster) => roster.id);
+          leaguesDAO.getLeaguesFromRosterIdList(
+            db,
+            { rosterIds },
+            (leagues) => {
+              const leagueIds = leagues.map((league) => league.league_id);
+              leaguesDAO.getLeaguesNotInList(
+                db,
+                { leagueIds },
+                (leaguesList) => {
+                  callback(leaguesList);
+                }
+              );
+            }
+          );
+        }
+      );
+    });
+  });
+}
+
 module.exports = {
   getUsersLeagues,
   getLeagueInfo,
@@ -108,4 +140,5 @@ module.exports = {
   joinLeague,
   getLeaguesWithoutUser,
   getLeagueName,
+  getAvailableLeaguesForNewRoster,
 };

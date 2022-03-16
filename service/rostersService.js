@@ -199,16 +199,14 @@ function canRostersBeCreated(db, params, callback) {
   homeService.getCurrentTournamentLeaderboard(
     db,
     (currentTournamentLeaderboard) => {
-      let canCreate = false;
+      let canCreate = true;
       currentTournamentLeaderboard.forEach((player) => {
-        if (
-          player.round_1 === undefined &&
-          player.round_2 === undefined &&
-          player.round_3 === undefined &&
-          player.round_4 === undefined
-        ) {
-          canCreate = canCreate || true;
-        }
+        canCreate =
+          canCreate &&
+          player.round_1 === null &&
+          player.round_2 === null &&
+          player.round_3 === null &&
+          player.round_4 === null;
       });
       callback({ canRostersBeCreated: canCreate });
     }
@@ -241,6 +239,7 @@ function getCurrentTournamentPlayers(db, callback) {
 
 function createNewRoster(db, params, callback) {
   const {
+    rosterId,
     rosterName,
     username,
     player1Id,
@@ -249,23 +248,79 @@ function createNewRoster(db, params, callback) {
     player4Id,
     leagueIdList,
   } = params;
-
-  userDAO.getUserFromUsername(db, { username }, (userInfo) => {
-    const userId = userInfo[0].id;
-    homeService.getCurrentTournament(db, (currentTournament) => {
-      const tournamentId = currentTournament.id;
-      params = { ...params, userId, tournamentId };
-      rostersDAO.createNewRoster(db, params, (rosterCreated) => {
-        const rosterId = rosterCreated.insertId;
-        leagueIdList.map((leagueId) => {
-          leaguesDAO.addRosterToLeagues(
-            db,
-            { leagueId, rosterId },
-            (result) => {}
-          );
+  canRostersBeCreated(db, {}, (result) => {
+    if (result.canRostersBeCreated) {
+      userDAO.getUserFromUsername(db, { username }, (userInfo) => {
+        const userId = userInfo[0].id;
+        homeService.getCurrentTournament(db, (currentTournament) => {
+          const tournamentId = currentTournament.id;
+          params = { ...params, userId, tournamentId };
+          if (rosterId === -1) {
+            rostersDAO.createNewRoster(db, params, (rosterCreated) => {
+              const rosterId = rosterCreated.insertId;
+              leagueIdList.map((leagueId) => {
+                leaguesDAO.addRosterToLeagues(
+                  db,
+                  { leagueId, rosterId },
+                  (result) => {}
+                );
+              });
+              callback({ status: 200 });
+            });
+          } else {
+            rostersDAO.updateRoster(db, params, (rosterUpdated) => {
+              rostersDAO.deleteRosterFromLeagues(
+                db,
+                { rosterId },
+                (rosterDeleted) => {}
+              );
+              leagueIdList.map((leagueId) => {
+                leaguesDAO.addRosterToLeagues(
+                  db,
+                  { leagueId, rosterId },
+                  (result) => {}
+                );
+              });
+            });
+          }
         });
-        callback({ success: 200 });
       });
+    } else {
+      callback({ status: 400 });
+    }
+  });
+}
+
+function deleteRoster(db, params, callback) {
+  const { rosterId, rosterTournamentId } = params;
+  canRostersBeCreated(db, {}, (result) => {
+    if (result.canRostersBeCreated) {
+      homeService.getCurrentTournament(db, (currentTournament) => {
+        if (rosterTournamentId === currentTournament.id) {
+          rostersDAO.deleteRoster(db, { rosterId }, (rosterDeleted) => {
+            rostersDAO.deleteRosterFromLeagues(
+              db,
+              { rosterId },
+              (leaguesDeleted) => {
+                callback({ status: 200 });
+              }
+            );
+          });
+        } else {
+          callback({ status: 400 });
+        }
+      });
+    } else {
+      callback({ status: 400 });
+    }
+  });
+}
+
+function getRosterDataFromId(db, params, callback) {
+  const { rosterId } = params;
+  rostersDAO.getRosterFromRosterId(db, { rosterId }, (roster) => {
+    getLeaguesOfRoster(db, { rosterId }, (leagues) => {
+      callback({ roster: roster[0], leagues });
     });
   });
 }
@@ -277,4 +332,6 @@ module.exports = {
   canRostersBeCreated,
   getCurrentTournamentPlayers,
   createNewRoster,
+  deleteRoster,
+  getRosterDataFromId,
 };

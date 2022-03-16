@@ -97,10 +97,95 @@ function updateBestBallTotal(db, params, callback) {
   );
 }
 
+function deleteRoster(db, params, callback) {
+  const { rosterId } = params;
+  db.query("delete from rosters where id = ?", [rosterId], (err, result) => {
+    if (err) {
+      throw err;
+    }
+    callback(result);
+  });
+}
+
+function deleteRosterFromLeagues(db, params, callback) {
+  const { rosterId } = params;
+  db.query(
+    "delete from leaguerosters where roster_id = ?",
+    [rosterId],
+    (err, result) => {
+      if (err) {
+        throw err;
+      }
+      callback(result);
+    }
+  );
+}
+
+function getRosterFromRosterId(db, params, callback) {
+  const { rosterId } = params;
+  db.query("select * from rosters where id = ?", [rosterId], (err, result) => {
+    if (err) {
+      throw err;
+    }
+    callback(result);
+  });
+}
+
+function updateRoster(db, params, callback) {
+  const {
+    rosterId,
+    rosterName,
+    tournamentId,
+    userId,
+    player1Id,
+    player2Id,
+    player3Id,
+    player4Id,
+  } = params;
+  db.query(
+    "update rosters set roster_name = ?, tournament_id = ?, user_id = ?, player_1_id = ?, player_2_id = ?, player_3_id = ?, player_4_id = ? where id = ?",
+    [
+      rosterName,
+      tournamentId,
+      userId,
+      player1Id,
+      player2Id,
+      player3Id,
+      player4Id,
+      rosterId,
+    ],
+    (err, result) => {
+      if (err) {
+        throw err;
+      }
+      callback(result);
+    }
+  );
+}
+
+function getRosterFromUserIdAndTournamentId(db, params, callback) {
+  const { userId, tournamentId } = params;
+  db.query(
+    "select * from rosters where user_id = ? and tournament_id = ?",
+    [userId, tournamentId],
+    (err, result) => {
+      if (err) {
+        throw err;
+      }
+      callback(result);
+    }
+  );
+}
+
 module.exports = {
   getRostersFromUserId,
   createNewRoster,
   getRostersForUserListAndRosterList,
   getRostersForTournament,
   updateBestBallTotal,
+  deleteRoster,
+  deleteRosterFromLeagues,
+  getRosterFromRosterId,
+  updateRoster,
+  getRosterFromUserIdAndTournamentId,
 };

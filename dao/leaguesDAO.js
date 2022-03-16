@@ -137,6 +137,24 @@ function getLeaguesNotInList(db, params, callback) {
   });
 }
 
+function getLeaguesFromRosterIdList(db, params, callback) {
+  const { rosterIds } = params;
+  if (rosterIds.length > 0) {
+    db.query(
+      "select * from leaguerosters where roster_id in (?)",
+      [rosterIds],
+      (err, result) => {
+        if (err) {
+          throw err;
+        }
+        callback(result);
+      }
+    );
+  } else {
+    callback([]);
+  }
+}
+
 module.exports = {
   getLeaguesFromRosterId,
   getLeaguesFromGivenLeagueIds,
@@ -148,4 +166,5 @@ module.exports = {
   joinLeague,
   getLeagueIdFromLeagueName,
   getLeaguesNotInList,
+  getLeaguesFromRosterIdList,
 };

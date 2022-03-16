@@ -39,6 +39,18 @@ function rostersRoutes({ app, db }) {
       res.send(result);
     });
   });
+
+  app.post("/delete-roster", (req, res) => {
+    rostersService.deleteRoster(db, req.body, (result) => {
+      res.send(result);
+    });
+  });
+
+  app.post("/get-roster-data-from-id", (req, res) => {
+    rostersService.getRosterDataFromId(db, req.body, (result) => {
+      res.send(result);
+    });
+  });
 }
 
 module.exports = rostersRoutes;

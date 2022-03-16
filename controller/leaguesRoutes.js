@@ -36,6 +36,12 @@ function leaguesRoutes({ db, app }) {
       res.send(result);
     });
   });
+
+  app.post("/get-available-leagues-for-new-roster", (req, res) => {
+    leaguesService.getAvailableLeaguesForNewRoster(db, req.body, (result) => {
+      res.send(result);
+    });
+  });
 }
 
 module.exports = leaguesRoutes;
