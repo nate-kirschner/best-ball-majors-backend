@@ -9,31 +9,31 @@ function userRoutes({ app, db }) {
     algorithms: ["HS256"],
   });
 
-  app.post("/signup", (req, res) => {
+  app.post(config.baseUrl + "/signup", (req, res) => {
     userService.signup(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/log-in", (req, res) => {
+  app.post(config.baseUrl + "/log-in", (req, res) => {
     userService.login(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/reset-password-request", (req, res) => {
+  app.post(config.baseUrl + "/reset-password-request", (req, res) => {
     userService.resetPasswordRequest(db, req.body, (result) => {
       // res.send(result);
     });
   });
 
-  app.post("/reset-password", (req, res) => {
+  app.post(config.baseUrl + "/reset-password", (req, res) => {
     userService.resetPassword(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.get("/", jwtMW, (req, res) => {
+  app.get(config.baseUrl, jwtMW, (req, res) => {
     res.send("You are authenticated");
   });
 }

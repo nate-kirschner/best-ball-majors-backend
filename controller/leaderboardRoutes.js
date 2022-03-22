@@ -1,7 +1,8 @@
 const leaderboardService = require("../service/leaderboardService");
+const config = require("../config");
 
 function leaderboardRoutes({ db, app }) {
-  app.post("/get-all-tournaments", (req, res) => {
+  app.post(config.baseUrl + "/get-all-tournaments", (req, res) => {
     leaderboardService.getAllTournaments(db, (tournaments) => {
       res.send(tournaments);
     });

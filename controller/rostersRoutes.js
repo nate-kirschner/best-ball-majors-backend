@@ -1,14 +1,15 @@
 const rostersService = require("../service/rostersService");
 const homeService = require("../service/homeService");
+const config = require("../config");
 
 function rostersRoutes({ app, db }) {
-  app.post("/get-all-users-rosters", (req, res) => {
+  app.post(config.baseUrl + "/get-all-users-rosters", (req, res) => {
     rostersService.getInitialRosterInfo(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/can-rosters-be-created", (req, res) => {
+  app.post(config.baseUrl + "/can-rosters-be-created", (req, res) => {
     rostersService.canRostersBeCreated(db, req.body, (result) => {
       res.send({
         canRostersBeCreated: result.canRostersBeCreated,
@@ -16,37 +17,40 @@ function rostersRoutes({ app, db }) {
     });
   });
 
-  app.post("/get-players-in-current-tournament", (req, res) => {
-    rostersService.getCurrentTournamentPlayers(db, (result) => {
-      res.send(result);
-    });
-  });
+  app.post(
+    config.baseUrl + "/get-players-in-current-tournament",
+    (req, res) => {
+      rostersService.getCurrentTournamentPlayers(db, (result) => {
+        res.send(result);
+      });
+    }
+  );
 
-  app.post("/get-individual-roster-data", (req, res) => {
+  app.post(config.baseUrl + "/get-individual-roster-data", (req, res) => {
     rostersService.getIndividualRosterData(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/get-roster-scorecard-data", (req, res) => {
+  app.post(config.baseUrl + "/get-roster-scorecard-data", (req, res) => {
     rostersService.getRosterScorecardData(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/create-new-roster", (req, res) => {
+  app.post(config.baseUrl + "/create-new-roster", (req, res) => {
     rostersService.createNewRoster(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/delete-roster", (req, res) => {
+  app.post(config.baseUrl + "/delete-roster", (req, res) => {
     rostersService.deleteRoster(db, req.body, (result) => {
       res.send(result);
     });
   });
 
-  app.post("/get-roster-data-from-id", (req, res) => {
+  app.post(config.baseUrl + "/get-roster-data-from-id", (req, res) => {
     rostersService.getRosterDataFromId(db, req.body, (result) => {
       res.send(result);
     });
