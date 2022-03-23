@@ -1,12 +1,13 @@
 const puppeteer = require("puppeteer");
 const getPlayersInTournament = require("../automation/getPlayersInTournament");
+const config = require("../config");
 
 async function getPlayerScores() {
   let playersInTournament = await getPlayersInTournament();
 
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-  await page.goto("https://espn.com/golf/leaderboard");
+  await page.goto(config.espnLink);
 
   // Get the table headers for the competitors table
   await page.waitForSelector(".competitors .Table__THEAD th");
