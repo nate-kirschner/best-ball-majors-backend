@@ -153,11 +153,23 @@ function getAvailableLeaguesForNewRoster(db, params, callback) {
               { rosterIds },
               (leagues) => {
                 const leagueIds = leagues.map((league) => league.league_id);
-                leaguesDAO.getLeaguesNotInList(
+                leaguesDAO.getLeaguesFromUserId(
                   db,
-                  { leagueIds },
-                  (leaguesList) => {
-                    callback(leaguesList);
+                  { userId },
+                  (usersLeagues) => {
+                    const nonAvailableLeaguesForUser = usersLeagues
+                      .map((league) =>
+                        !leagueIds.includes(league.league_id) ? league : null
+                      )
+                      .filter((l) => l)
+                      .map((league) => league.league_id);
+                    leaguesDAO.getLeaguesFromGivenLeagueIds(
+                      db,
+                      { leagueIdList: nonAvailableLeaguesForUser },
+                      (leaguesList) => {
+                        callback(leaguesList);
+                      }
+                    );
                   }
                 );
               }
