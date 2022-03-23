@@ -10,72 +10,111 @@ const scorecardService = require("../service/scorecardService");
 
 // gets list of rosters without going into other databases for specific information
 function getInitialRosterInfo(db, params, callback) {
-  const { username } = params;
-  userDAO.getUserFromUsername(db, { username }, (userInfo) => {
-    const userId = userInfo[0].id;
-    rostersDAO.getRostersFromUserId(db, { userId }, (rosters) => {
-      callback(rosters);
+  try {
+    const { username } = params;
+    userDAO.getUserFromUsername(db, { username }, (userInfo) => {
+      const userId = userInfo[0].id;
+      rostersDAO.getRostersFromUserId(db, { userId }, (rosters) => {
+        callback(rosters);
+      });
     });
-  });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getIndividualRosterData(db, params, callback) {
-  const { rosterId, tournamentId, player1Id, player2Id, player3Id, player4Id } =
-    params;
-  tournamentsDAO.getTournamentFromId(db, { tournamentId }, (tournamentInfo) => {
-    const tournamentName = tournamentInfo[0].tournament_name;
-    const playerIdList = {
-      player1Id: player1Id,
-      player2Id: player2Id,
-      player3Id: player3Id,
-      player4Id: player4Id,
-    };
-    getPlayerNames(db, playerIdList, (playersInfo) => {
-      getLeaderboardForGivenPlayersInTournament(db, params, (leaderboard) => {
-        getLeaguesOfRoster(db, { rosterId }, (leagueNames) => {
-          const accumulatedRoster = accumulateRosterData(
-            tournamentInfo,
-            playersInfo,
-            leaderboard,
-            leagueNames
+  try {
+    const {
+      rosterId,
+      tournamentId,
+      player1Id,
+      player2Id,
+      player3Id,
+      player4Id,
+    } = params;
+    tournamentsDAO.getTournamentFromId(
+      db,
+      { tournamentId },
+      (tournamentInfo) => {
+        const tournamentName = tournamentInfo[0].tournament_name;
+        const playerIdList = {
+          player1Id: player1Id,
+          player2Id: player2Id,
+          player3Id: player3Id,
+          player4Id: player4Id,
+        };
+        getPlayerNames(db, playerIdList, (playersInfo) => {
+          getLeaderboardForGivenPlayersInTournament(
+            db,
+            params,
+            (leaderboard) => {
+              getLeaguesOfRoster(db, { rosterId }, (leagueNames) => {
+                const accumulatedRoster = accumulateRosterData(
+                  tournamentInfo,
+                  playersInfo,
+                  leaderboard,
+                  leagueNames
+                );
+                callback(accumulatedRoster);
+              });
+            }
           );
-          callback(accumulatedRoster);
         });
-      });
-    });
-  });
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getPlayerNames(db, params, callback) {
-  const { player1Id, player2Id, player3Id, player4Id } = params;
-  params = { allPlayerIds: [player1Id, player2Id, player3Id, player4Id] };
-  playersDAO.getAllGivenPlayers(db, params, (playersInfo) => {
-    callback(playersInfo);
-  });
+  try {
+    const { player1Id, player2Id, player3Id, player4Id } = params;
+    params = { allPlayerIds: [player1Id, player2Id, player3Id, player4Id] };
+    playersDAO.getAllGivenPlayers(db, params, (playersInfo) => {
+      callback(playersInfo);
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getLeaderboardForGivenPlayersInTournament(db, params, callback) {
-  leaderboardDAO.getLeaderboardForGivenPlayersInTournament(
-    db,
-    params,
-    (leaderboard) => {
-      callback(leaderboard);
-    }
-  );
+  try {
+    leaderboardDAO.getLeaderboardForGivenPlayersInTournament(
+      db,
+      params,
+      (leaderboard) => {
+        callback(leaderboard);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getLeaguesOfRoster(db, params, callback) {
-  const { rosterId } = params;
-  leaguesDAO.getLeaguesFromRosterId(db, { rosterId }, (leagues) => {
-    const leagueIdList = leagues.map((league) => league.league_id);
-    leaguesDAO.getLeaguesFromGivenLeagueIds(
-      db,
-      { leagueIdList },
-      (leagueNames) => {
-        callback(leagueNames);
-      }
-    );
-  });
+  try {
+    const { rosterId } = params;
+    leaguesDAO.getLeaguesFromRosterId(db, { rosterId }, (leagues) => {
+      const leagueIdList = leagues.map((league) => league.league_id);
+      leaguesDAO.getLeaguesFromGivenLeagueIds(
+        db,
+        { leagueIdList },
+        (leagueNames) => {
+          callback(leagueNames);
+        }
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function accumulateRosterData(
@@ -147,182 +186,217 @@ function accumulatePlayerData(playerId, playersInfo, leaderboardInfo) {
 }
 
 function getRosterScorecardData(db, params, callback) {
-  const { tournamentId, player1Id, player2Id, player3Id, player4Id } = params;
-  scorecardsDAO.getRoundsForFourPlayers(db, params, (playerHoles) => {
-    scorecardsDAO.getParFromTournament(db, { tournamentId }, (par) => {
-      const parHoles = par[0];
-      const player1Holes = playerHoles.filter(
-        (player) => player.player_id === player1Id
-      );
-      const player2Holes = playerHoles.filter(
-        (player) => player.player_id === player2Id
-      );
-      const player3Holes = playerHoles.filter(
-        (player) => player.player_id === player3Id
-      );
-      const player4Holes = playerHoles.filter(
-        (player) => player.player_id === player4Id
-      );
-      const scores = {};
-      const players = [player1Holes, player2Holes, player3Holes, player4Holes];
-      players.map((playerHoles) => {
-        playerHoles.map((playerRound) => {
-          if (scores[playerRound.player_id]) {
-            scores[playerRound.player_id][playerRound.round_number] =
-              playerRound;
-          } else {
-            scores[playerRound.player_id] = {
-              [playerRound.round_number]: playerRound,
-            };
-          }
-        });
-      });
-      scorecardService.calculateBestBallScores(
-        db,
-        { scores, par: parHoles },
-        (bestBallScores) => {
-          callback({
-            parHoles,
-            player1Holes,
-            player2Holes,
-            player3Holes,
-            player4Holes,
-            bestBallScores,
+  try {
+    const { tournamentId, player1Id, player2Id, player3Id, player4Id } = params;
+    scorecardsDAO.getRoundsForFourPlayers(db, params, (playerHoles) => {
+      scorecardsDAO.getParFromTournament(db, { tournamentId }, (par) => {
+        const parHoles = par[0];
+        const player1Holes = playerHoles.filter(
+          (player) => player.player_id === player1Id
+        );
+        const player2Holes = playerHoles.filter(
+          (player) => player.player_id === player2Id
+        );
+        const player3Holes = playerHoles.filter(
+          (player) => player.player_id === player3Id
+        );
+        const player4Holes = playerHoles.filter(
+          (player) => player.player_id === player4Id
+        );
+        const scores = {};
+        const players = [
+          player1Holes,
+          player2Holes,
+          player3Holes,
+          player4Holes,
+        ];
+        players.map((playerHoles) => {
+          playerHoles.map((playerRound) => {
+            if (scores[playerRound.player_id]) {
+              scores[playerRound.player_id][playerRound.round_number] =
+                playerRound;
+            } else {
+              scores[playerRound.player_id] = {
+                [playerRound.round_number]: playerRound,
+              };
+            }
           });
-        }
-      );
+        });
+        scorecardService.calculateBestBallScores(
+          db,
+          { scores, par: parHoles },
+          (bestBallScores) => {
+            callback({
+              parHoles,
+              player1Holes,
+              player2Holes,
+              player3Holes,
+              player4Holes,
+              bestBallScores,
+            });
+          }
+        );
+      });
     });
-  });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function canRostersBeCreated(db, params, callback) {
-  homeService.getCurrentTournamentLeaderboard(
-    db,
-    (currentTournamentLeaderboard) => {
-      let canCreate = true;
-      currentTournamentLeaderboard.forEach((player) => {
-        canCreate =
-          canCreate &&
-          player.round_1 === null &&
-          player.round_2 === null &&
-          player.round_3 === null &&
-          player.round_4 === null;
-      });
-      callback({ canRostersBeCreated: canCreate });
-    }
-  );
+  try {
+    homeService.getCurrentTournamentLeaderboard(
+      db,
+      (currentTournamentLeaderboard) => {
+        let canCreate = true;
+        currentTournamentLeaderboard.forEach((player) => {
+          canCreate =
+            canCreate &&
+            player.round_1 === null &&
+            player.round_2 === null &&
+            player.round_3 === null &&
+            player.round_4 === null;
+        });
+        callback({ canRostersBeCreated: canCreate });
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 // used for create roster page
 function getCurrentTournamentPlayers(db, callback) {
-  homeService.getCurrentTournamentPlayers(db, (result) => {
-    const sortedPlayerList = result.sort((a, b) => {
-      if (a.player_rank === -1) {
-        return 1;
-      } else if (b.player_rank === -1) {
-        return -1;
-      } else if (a.player_rank < b.player_rank) {
-        return -1;
-      } else {
-        return 1;
-      }
+  try {
+    homeService.getCurrentTournamentPlayers(db, (result) => {
+      const sortedPlayerList = result.sort((a, b) => {
+        if (a.player_rank === -1) {
+          return 1;
+        } else if (b.player_rank === -1) {
+          return -1;
+        } else if (a.player_rank < b.player_rank) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+      const playerPages = {
+        1: sortedPlayerList.slice(0, 15),
+        2: sortedPlayerList.slice(15, 40),
+        3: sortedPlayerList.slice(40, 75),
+        4: sortedPlayerList.slice(75),
+      };
+      callback(playerPages);
     });
-    const playerPages = {
-      1: sortedPlayerList.slice(0, 15),
-      2: sortedPlayerList.slice(15, 40),
-      3: sortedPlayerList.slice(40, 75),
-      4: sortedPlayerList.slice(75),
-    };
-    callback(playerPages);
-  });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function createNewRoster(db, params, callback) {
-  const {
-    rosterId,
-    rosterName,
-    username,
-    player1Id,
-    player2Id,
-    player3Id,
-    player4Id,
-    leagueIdList,
-  } = params;
-  canRostersBeCreated(db, {}, (result) => {
-    if (result.canRostersBeCreated) {
-      userDAO.getUserFromUsername(db, { username }, (userInfo) => {
-        const userId = userInfo[0].id;
-        homeService.getCurrentTournament(db, (currentTournament) => {
-          const tournamentId = currentTournament.id;
-          params = { ...params, userId, tournamentId };
-          if (rosterId === -1) {
-            rostersDAO.createNewRoster(db, params, (rosterCreated) => {
-              const rosterId = rosterCreated.insertId;
-              leagueIdList.map((leagueId) => {
-                leaguesDAO.addRosterToLeagues(
-                  db,
-                  { leagueId, rosterId },
-                  (result) => {}
-                );
+  try {
+    const {
+      rosterId,
+      rosterName,
+      username,
+      player1Id,
+      player2Id,
+      player3Id,
+      player4Id,
+      leagueIdList,
+    } = params;
+    canRostersBeCreated(db, {}, (result) => {
+      if (result.canRostersBeCreated) {
+        userDAO.getUserFromUsername(db, { username }, (userInfo) => {
+          const userId = userInfo[0].id;
+          homeService.getCurrentTournament(db, (currentTournament) => {
+            const tournamentId = currentTournament.id;
+            params = { ...params, userId, tournamentId };
+            if (rosterId === -1) {
+              rostersDAO.createNewRoster(db, params, (rosterCreated) => {
+                const rosterId = rosterCreated.insertId;
+                leagueIdList.map((leagueId) => {
+                  leaguesDAO.addRosterToLeagues(
+                    db,
+                    { leagueId, rosterId },
+                    (result) => {}
+                  );
+                });
+                callback({ status: 200 });
               });
-              callback({ status: 200 });
-            });
-          } else {
-            rostersDAO.updateRoster(db, params, (rosterUpdated) => {
-              rostersDAO.deleteRosterFromLeagues(
-                db,
-                { rosterId },
-                (rosterDeleted) => {}
-              );
-              leagueIdList.map((leagueId) => {
-                leaguesDAO.addRosterToLeagues(
+            } else {
+              rostersDAO.updateRoster(db, params, (rosterUpdated) => {
+                rostersDAO.deleteRosterFromLeagues(
                   db,
-                  { leagueId, rosterId },
-                  (result) => {}
+                  { rosterId },
+                  (rosterDeleted) => {}
                 );
+                leagueIdList.map((leagueId) => {
+                  leaguesDAO.addRosterToLeagues(
+                    db,
+                    { leagueId, rosterId },
+                    (result) => {}
+                  );
+                });
               });
-            });
-          }
+            }
+          });
         });
-      });
-    } else {
-      callback({ status: 400 });
-    }
-  });
+      } else {
+        callback({ status: 400 });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function deleteRoster(db, params, callback) {
-  const { rosterId, rosterTournamentId } = params;
-  canRostersBeCreated(db, {}, (result) => {
-    if (result.canRostersBeCreated) {
-      homeService.getCurrentTournament(db, (currentTournament) => {
-        if (rosterTournamentId === currentTournament.id) {
-          rostersDAO.deleteRoster(db, { rosterId }, (rosterDeleted) => {
-            rostersDAO.deleteRosterFromLeagues(
-              db,
-              { rosterId },
-              (leaguesDeleted) => {
-                callback({ status: 200 });
-              }
-            );
-          });
-        } else {
-          callback({ status: 400 });
-        }
-      });
-    } else {
-      callback({ status: 400 });
-    }
-  });
+  try {
+    const { rosterId, rosterTournamentId } = params;
+    canRostersBeCreated(db, {}, (result) => {
+      if (result.canRostersBeCreated) {
+        homeService.getCurrentTournament(db, (currentTournament) => {
+          if (rosterTournamentId === currentTournament.id) {
+            rostersDAO.deleteRoster(db, { rosterId }, (rosterDeleted) => {
+              rostersDAO.deleteRosterFromLeagues(
+                db,
+                { rosterId },
+                (leaguesDeleted) => {
+                  callback({ status: 200 });
+                }
+              );
+            });
+          } else {
+            callback({ status: 400 });
+          }
+        });
+      } else {
+        callback({ status: 400 });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getRosterDataFromId(db, params, callback) {
-  const { rosterId } = params;
-  rostersDAO.getRosterFromRosterId(db, { rosterId }, (roster) => {
-    getLeaguesOfRoster(db, { rosterId }, (leagues) => {
-      callback({ roster: roster[0], leagues });
+  try {
+    const { rosterId } = params;
+    rostersDAO.getRosterFromRosterId(db, { rosterId }, (roster) => {
+      getLeaguesOfRoster(db, { rosterId }, (leagues) => {
+        callback({ roster: roster[0], leagues });
+      });
     });
-  });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 module.exports = {

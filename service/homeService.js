@@ -4,105 +4,130 @@ const playersDAO = require("../dao/playersDAO");
 const scorecardsDAO = require("../dao/scorecardsDAO");
 
 function getAllHomePageInfo(db, callback) {
-  getCurrentTournament(db, (currentTournament) => {
-    getCurrentTournamentScorecards(db, (scorecardsData) => {
-      // const sortedData = scorecardsData.sort((first, second) => {
-      //   const firstNum = parseInt(first.position);
-      //   const secondNum = parseInt(second.position);
-      //   if (!!firstNum && !secondNum) {
-      //     return 1;
-      //   } else if (!firstNum && !!secondNum) {
-      //     return -1;
-      //   } else if (!!firstNum && !!secondNum && firstNum > secondNum) {
-      //     return 1;
-      //   } else {
-      //     return -1;
-      //   }
-      // });
-      const sortedData = scorecardsData.sort((a, b) => {
-        if (a.position.match(/\d+/g) == null) {
-          if (b.position.match(/\d+/g) == null) {
-            return a.total > b.total ? 1 : -1;
-          } else {
-            return 1;
-          }
-        } else if (b.position.match(/\d+/g) == null) {
+  try {
+    getCurrentTournament(db, (currentTournament) => {
+      getCurrentTournamentScorecards(db, (scorecardsData) => {
+        // const sortedData = scorecardsData.sort((first, second) => {
+        //   const firstNum = parseInt(first.position);
+        //   const secondNum = parseInt(second.position);
+        //   if (!!firstNum && !secondNum) {
+        //     return 1;
+        //   } else if (!firstNum && !!secondNum) {
+        //     return -1;
+        //   } else if (!!firstNum && !!secondNum && firstNum > secondNum) {
+        //     return 1;
+        //   } else {
+        //     return -1;
+        //   }
+        // });
+        const sortedData = scorecardsData.sort((a, b) => {
           if (a.position.match(/\d+/g) == null) {
-            return a.total > b.total ? 1 : -1;
+            if (b.position.match(/\d+/g) == null) {
+              return a.total > b.total ? 1 : -1;
+            } else {
+              return 1;
+            }
+          } else if (b.position.match(/\d+/g) == null) {
+            if (a.position.match(/\d+/g) == null) {
+              return a.total > b.total ? 1 : -1;
+            } else {
+              return -1;
+            }
           } else {
-            return -1;
+            return Number(a.position.match(/\d+/g)[0]) >
+              Number(b.position.match(/\d+/g)[0])
+              ? 1
+              : -1;
           }
-        } else {
-          return Number(a.position.match(/\d+/g)[0]) >
-            Number(b.position.match(/\d+/g)[0])
-            ? 1
-            : -1;
-        }
+        });
+        const result = {
+          currentTournament,
+          data: sortedData,
+        };
+        callback(result);
       });
-      const result = {
-        currentTournament,
-        data: sortedData,
-      };
-      callback(result);
     });
-  });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getCurrentTournament(db, callback) {
-  tournamentsDAO.getAllTournament(db, (allTournaments) => {
-    const currentTournament = allTournaments.reduce((prev, current) =>
-      prev.id > current.id ? prev : current
-    );
-    callback(currentTournament);
-  });
+  try {
+    tournamentsDAO.getAllTournament(db, (allTournaments) => {
+      const currentTournament = allTournaments.reduce((prev, current) =>
+        prev.id > current.id ? prev : current
+      );
+      callback(currentTournament);
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getCurrentTournamentLeaderboard(db, callback) {
-  getCurrentTournament(db, (currentTournament) => {
-    const params = {
-      currentTournamentId: currentTournament.id,
-    };
-    leaderboardDAO.getLeaderboardsFromCurrentTournament(
-      db,
-      params,
-      (leaderboard) => {
-        callback(leaderboard);
-      }
-    );
-  });
+  try {
+    getCurrentTournament(db, (currentTournament) => {
+      const params = {
+        currentTournamentId: currentTournament.id,
+      };
+      leaderboardDAO.getLeaderboardsFromCurrentTournament(
+        db,
+        params,
+        (leaderboard) => {
+          callback(leaderboard);
+        }
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 // Will be used for create roster page
 function getCurrentTournamentPlayers(db, callback) {
-  getCurrentTournamentLeaderboard(db, (leaderboard) => {
-    let players = [];
-    leaderboard.forEach((leaderboardItem, index) => {
-      const playerId = leaderboardItem.player_id;
-      playersDAO.getPlayerFromId(db, { playerId }, (playerInfo) => {
-        players = [...players, ...playerInfo];
-        if (index === leaderboard.length - 1) {
-          callback(players);
-        }
+  try {
+    getCurrentTournamentLeaderboard(db, (leaderboard) => {
+      let players = [];
+      leaderboard.forEach((leaderboardItem, index) => {
+        const playerId = leaderboardItem.player_id;
+        playersDAO.getPlayerFromId(db, { playerId }, (playerInfo) => {
+          players = [...players, ...playerInfo];
+          if (index === leaderboard.length - 1) {
+            callback(players);
+          }
+        });
       });
     });
-  });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function getCurrentTournamentScorecards(db, callback) {
-  getCurrentTournamentLeaderboard(db, (leaderboard) => {
-    let tournamentId = leaderboard[0].tournament_id;
-    scorecardsDAO.getAllScorecardsFromTournament(
-      db,
-      { tournamentId },
-      (scorecards) => {
-        const allPlayerIds = leaderboard.map((item) => item.player_id);
-        playersDAO.getAllGivenPlayers(db, { allPlayerIds }, (players) => {
-          const allCards = joinCards(leaderboard, scorecards, players);
-          callback(allCards);
-        });
-      }
-    );
-  });
+  try {
+    getCurrentTournamentLeaderboard(db, (leaderboard) => {
+      let tournamentId = leaderboard[0].tournament_id;
+      scorecardsDAO.getAllScorecardsFromTournament(
+        db,
+        { tournamentId },
+        (scorecards) => {
+          const allPlayerIds = leaderboard.map((item) => item.player_id);
+          playersDAO.getAllGivenPlayers(db, { allPlayerIds }, (players) => {
+            const allCards = joinCards(leaderboard, scorecards, players);
+            callback(allCards);
+          });
+        }
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    callback({ status: 400 });
+  }
 }
 
 function joinCards(leaderboardArray, scorecardsArray, playersArray) {
