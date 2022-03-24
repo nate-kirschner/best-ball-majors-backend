@@ -14,17 +14,21 @@ function getLeaguesFromRosterId(db, params, callback) {
 
 function getLeaguesFromGivenLeagueIds(db, params, callback) {
   const { leagueIdList } = params;
-  let queryString = "select * from leagues where id = ?";
-  const idString = " or id = ?";
-  for (let i = 0; i < leagueIdList.length - 1; i++) {
-    queryString += idString;
-  }
-  db.query(queryString, leagueIdList, (err, result) => {
-    if (err) {
-      throw err;
+  if (leagueIdList.length > 0) {
+    let queryString = "select * from leagues where id = ?";
+    const idString = " or id = ?";
+    for (let i = 0; i < leagueIdList.length - 1; i++) {
+      queryString += idString;
     }
-    callback(result);
-  });
+    db.query(queryString, leagueIdList, (err, result) => {
+      if (err) {
+        throw err;
+      }
+      callback(result);
+    });
+  } else {
+    callback({ status: 400 });
+  }
 }
 
 function getLeaguesFromUserId(db, params, callback) {
