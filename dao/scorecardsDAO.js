@@ -175,6 +175,20 @@ function getAllRoundIdsForPlayerAndTournament(db, params, callback) {
   );
 }
 
+function getAllRoundsForTournament(db, params, callback) {
+  const { tournamentId } = params;
+  db.query(
+    "select * from rounds where tournament_id = ?",
+    [tournamentId],
+    (err, result) => {
+      if (err) {
+        throw err;
+      }
+      callback(result);
+    }
+  );
+}
+
 module.exports = {
   getAllScorecardsFromTournament,
   getRoundsFromIds,
@@ -186,4 +200,5 @@ module.exports = {
   getScorecard,
   addScorecard,
   updateRound,
+  getAllRoundsForTournament,
 };

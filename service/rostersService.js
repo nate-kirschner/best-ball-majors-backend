@@ -245,26 +245,23 @@ function getRosterScorecardData(db, params, callback) {
 }
 
 function canRostersBeCreated(db, params, callback) {
-  try {
-    homeService.getCurrentTournamentLeaderboard(
+  homeService.getCurrentTournament(db, (currentTournament) => {
+    const tournamentId = currentTournament.id;
+    scorecardsDAO.getAllRoundsForTournament(
       db,
-      (currentTournamentLeaderboard) => {
+      { tournamentId },
+      (allScorecards) => {
         let canCreate = true;
-        currentTournamentLeaderboard.forEach((player) => {
-          canCreate =
-            canCreate &&
-            player.round_1 === null &&
-            player.round_2 === null &&
-            player.round_3 === null &&
-            player.round_4 === null;
+        allScorecards.forEach((card) => {
+          for (let i = 1; i <= 18; i++) {
+            const holeStr = "hole_" + i;
+            canCreate = canCreate && card[holeStr] === null;
+          }
         });
         callback({ canRostersBeCreated: canCreate });
       }
     );
-  } catch (error) {
-    console.log(error);
-    callback({ status: 400 });
-  }
+  });
 }
 
 // used for create roster page

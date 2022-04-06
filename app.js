@@ -91,6 +91,15 @@ async function startServer() {
             }
           );
         });
+        await addCurrentTournament(db, async (currentTournamentId) => {
+          await addPlayersInTournament(
+            db,
+            currentTournamentId,
+            async (playersAdded) => {
+              await addPlayerRankings(db, (playerRankingsAdded) => {});
+            }
+          );
+        });
       } catch (error) {
         console.log("Error getting players and rankings: " + error);
       }
