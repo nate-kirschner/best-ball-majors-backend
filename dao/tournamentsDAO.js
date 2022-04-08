@@ -49,9 +49,24 @@ function addCurrentTournament(db, params, callback) {
   );
 }
 
+function getTournamentsFromNamesList(db, params, callback) {
+  const { tournamentNames } = params;
+  db.query(
+    "select * from tournaments where tournament_name in (?)",
+    [tournamentNames],
+    (err, result) => {
+      if (err) {
+        throw err;
+      }
+      callback(result);
+    }
+  );
+}
+
 module.exports = {
   getAllTournament,
   getTournamentFromId,
   getTournamentFromName,
   addCurrentTournament,
+  getTournamentsFromNamesList,
 };

@@ -11,6 +11,22 @@ function getAllTournaments(db, callback) {
   }
 }
 
+function getTournamentIds(db, params, callback) {
+  const { tournamentNames } = params;
+  try {
+    tournamentsDAO.getTournamentsFromNamesList(
+      db,
+      { tournamentNames },
+      (tournaments) => {
+        callback(tournaments);
+      }
+    );
+  } catch (error) {
+    callback({ status: 400 });
+  }
+}
+
 module.exports = {
   getAllTournaments,
+  getTournamentIds,
 };

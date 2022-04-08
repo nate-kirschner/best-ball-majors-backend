@@ -7,6 +7,12 @@ function leaderboardRoutes({ db, app }) {
       res.send(tournaments);
     });
   });
+
+  app.post(config.baseUrl + "/get-tournament-ids", (req, res) => {
+    leaderboardService.getTournamentIds(db, req.body, (tournaments) => {
+      res.send(tournaments);
+    });
+  });
 }
 
 module.exports = leaderboardRoutes;
